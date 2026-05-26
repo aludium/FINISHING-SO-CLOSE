@@ -319,7 +319,7 @@
                   },
                   {
                       "parameters":  {
-                                         "sendTo":  "juan.ibanez@aludium.com",
+                                         "toRecipients":  "juan.ibanez@aludium.com",
                                          "subject":  "=Resumen SO_FINISHING_CLOSE - {{ $json.num_lotes }} lotes / {{ $json.num_orders }} orders",
                                          "bodyContent":  "={{ $json.resumen }}",
                                          "additionalFields":  {
@@ -495,45 +495,51 @@
                                                },
                         "Inicializar datos":  {
                                                   "main":  [
-                                                               {
-                                                                   "node":  "Query database",
-                                                                   "type":  "main",
-                                                                   "index":  0
-                                                               }
+                                                               [
+                                                                   {
+                                                                       "node":  "Query database",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
                                                            ]
                                               },
                         "Guardar LOTE":  {
                                              "main":  [
-                                                          {
-                                                              "node":  "Execute database",
-                                                              "type":  "main",
-                                                              "index":  0
-                                                          }
-                                                      ]
-                                         },
-                        "Guardar ORDER":  {
-                                              "main":  [
-                                                           {
-                                                               "node":  "Execute database1",
-                                                               "type":  "main",
-                                                               "index":  0
-                                                           }
-                                                       ]
-                                          },
-                        "Preparar resumen":  {
-                                                 "main":  [
+                                                          [
                                                               {
-                                                                  "node":  "Email resumen",
+                                                                  "node":  "Execute database",
                                                                   "type":  "main",
                                                                   "index":  0
                                                               }
                                                           ]
+                                                      ]
+                                         },
+                        "Guardar ORDER":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Execute database1",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Preparar resumen":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Email resumen",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
                                              }
                     },
     "settings":  {
-                     "executionOrder":  "v1",
-                     "binaryMode":  "separate",
-                     "availableInMCP":  false
+                     "executionOrder":  "v1"
                  },
     "staticData":  null,
     "meta":  {
