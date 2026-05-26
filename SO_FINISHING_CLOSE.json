@@ -64,6 +64,7 @@
       "position": [80, -140],
       "id": "203c8ebe-48ee-4b9f-9100-6ef676f3e3d1",
       "name": "Query SO para cierre",
+      "executeOnce": true,
       "credentials": {
         "oracleApi": {
           "id": "nyxPmQOvgDO0vvFg",
