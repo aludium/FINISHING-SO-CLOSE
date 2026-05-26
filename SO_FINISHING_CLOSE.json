@@ -86,13 +86,12 @@
     },
     {
       "parameters": {
-        "fromEmail": "n8n@aludium.com",
-        "toEmail": "juan.ibanez@aludium.com",
+        "sendTo": "juan.ibanez@aludium.com",
         "subject": "=Error recepcion lote - ORDER_NO: {{ $json.ORDER_NO }}",
-        "emailType": "text",
-        "message": "=Se ha producido un error al recibir el lote en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\nLOTE:        {{ $json.LOTE }}\n\nError:\n{{ $json.error }}"
+        "bodyContent": "=Se ha producido un error al recibir el lote en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\nLOTE:        {{ $json.LOTE }}\n\nError:\n{{ $json.error }}",
+        "additionalFields": {}
       },
-      "type": "n8n-nodes-base.emailSend",
+      "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
       "position": [520, 60],
       "id": "d2e3f4a5-b6c7-8901-def0-123456789012",
@@ -177,13 +176,12 @@
     },
     {
       "parameters": {
-        "fromEmail": "n8n@aludium.com",
-        "toEmail": "juan.ibanez@aludium.com",
+        "sendTo": "juan.ibanez@aludium.com",
         "subject": "=Error cierre SO - ORDER_NO: {{ $json.ORDER_NO }}",
-        "emailType": "text",
-        "message": "=Se ha producido un error al cerrar la Shop Order en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\n\nError:\n{{ $json.error }}"
+        "bodyContent": "=Se ha producido un error al cerrar la Shop Order en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\n\nError:\n{{ $json.error }}",
+        "additionalFields": {}
       },
-      "type": "n8n-nodes-base.emailSend",
+      "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
       "position": [960, -60],
       "id": "f4a5b6c7-d8e9-0123-f012-345678901234",
