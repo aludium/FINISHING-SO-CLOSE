@@ -39,7 +39,7 @@
     {
       "parameters": {
         "operation": "execute",
-        "query": "=DECLARE\n   p0_  VARCHAR2(32000) := '';\n   p1_  FLOAT;\n   p2_  VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p3_  VARCHAR2(32000) := '{{ $json.RELEASE_NO }}';\n   p4_  VARCHAR2(32000) := '{{ $json.SEQUENCE_NO }}';\n   p5_  VARCHAR2(32000) := '1';\n   p6_  VARCHAR2(32000) := 'Yes';\n   p7_  VARCHAR2(32000) := 'No';\n   p8_  VARCHAR2(32000) := 'Shop Order';\n   p9_  FLOAT := NULL;\n   p10_ VARCHAR2(32000) := '!\n$CONDITION_CODE=\n$LOCATION_NO=FG\n$LOT_BATCH_NO={{ $json.LOTE }}\n$WAIV_DEV_REJ_NO=\n$EXPIRATION_DATE=\n$AVAILABILITY_CONTROL_ID=\n$CATCH_QTY=0\n$RESERVED_QTY={{ $json.RESERVED_QTY }}\n';\n   p11_ VARCHAR2(32000) := 'No';\n   p12_ VARCHAR2(32000) := 'TRUE';\nBEGIN\n   SELECT IFSAPP.Inventory_Putaway_Manager_API.Get_Next_Putaway_Event_Id INTO p1_ FROM DUAL;\n   IFSAPP.Shop_Ord_Util_API.Receive_Lots_In_Message__(p0_, p1_, p2_, p3_, p4_, p5_, p6_, p7_, p8_, p9_, p10_, p11_, p12_);\nEND;",
+        "query": "=DECLARE\n   v_order_no_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p0_  VARCHAR2(32000) := '';\n   p1_  FLOAT;\n   p2_  VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p3_  VARCHAR2(32000) := '{{ $json.RELEASE_NO }}';\n   p4_  VARCHAR2(32000) := '{{ $json.SEQUENCE_NO }}';\n   p5_  VARCHAR2(32000) := '1';\n   p6_  VARCHAR2(32000) := 'Yes';\n   p7_  VARCHAR2(32000) := 'No';\n   p8_  VARCHAR2(32000) := 'Shop Order';\n   p9_  FLOAT := NULL;\n   p10_ VARCHAR2(32000) := '!\n$CONDITION_CODE=\n$LOCATION_NO=FG\n$LOT_BATCH_NO={{ $json.LOTE }}\n$WAIV_DEV_REJ_NO=\n$EXPIRATION_DATE=\n$AVAILABILITY_CONTROL_ID=\n$CATCH_QTY=0\n$RESERVED_QTY={{ $json.RESERVED_QTY }}\n';\n   p11_ VARCHAR2(32000) := 'No';\n   p12_ VARCHAR2(32000) := 'TRUE';\nBEGIN\n   IF v_order_no_ IS NOT NULL AND LENGTH(TRIM(v_order_no_)) > 0 THEN\n      SELECT IFSAPP.Inventory_Putaway_Manager_API.Get_Next_Putaway_Event_Id INTO p1_ FROM DUAL;\n      IFSAPP.Shop_Ord_Util_API.Receive_Lots_In_Message__(p0_, p1_, p2_, p3_, p4_, p5_, p6_, p7_, p8_, p9_, p10_, p11_, p12_);\n   END IF;\nEND;",
         "poolOptions": {}
       },
       "type": "@rempel/n8n-nodes-oracle.oracle",
@@ -86,7 +86,7 @@
     {
       "parameters": {
         "operation": "execute",
-        "query": "=DECLARE\n   p0_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p1_ VARCHAR2(32000) := '{{ $json.RELEASE_NO }}';\n   p2_ VARCHAR2(32000) := '{{ $json.SEQUENCE_NO }}';\nBEGIN\n   IFSAPP.Shop_Ord_API.Close_So_Under_Issue('AMO', p0_, p1_, p2_);\nEND;",
+        "query": "=DECLARE\n   v_order_no_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p0_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p1_ VARCHAR2(32000) := '{{ $json.RELEASE_NO }}';\n   p2_ VARCHAR2(32000) := '{{ $json.SEQUENCE_NO }}';\nBEGIN\n   IF v_order_no_ IS NOT NULL AND LENGTH(TRIM(v_order_no_)) > 0 THEN\n      IFSAPP.Shop_Ord_API.Close_So_Under_Issue('AMO', p0_, p1_, p2_);\n   END IF;\nEND;",
         "poolOptions": {}
       },
       "type": "@rempel/n8n-nodes-oracle.oracle",
