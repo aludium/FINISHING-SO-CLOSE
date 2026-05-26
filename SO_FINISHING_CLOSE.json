@@ -1,5 +1,5 @@
 ﻿{
-    "updatedAt":  "2026-05-26T11:08:47.787Z",
+    "updatedAt":  "2026-05-26T11:22:51.077Z",
     "createdAt":  "2026-04-21T14:02:16.069Z",
     "id":  "21T7HthEtcp1WVO0",
     "name":  "SO_FINISHING_CLOSE",
@@ -264,6 +264,83 @@
                                                                         }
                                       },
                       "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\ns.lotes_recibidos = [];\ns.orders_cerradas = [];\nreturn items;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -480,
+                                       16
+                                   ],
+                      "id":  "aa000001-0000-0000-0000-000000000001",
+                      "name":  "Inicializar datos"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nif (!Array.isArray(s.lotes_recibidos)) s.lotes_recibidos = [];\nfor (const item of items) {\n  if (item.json.ORDER_NO) {\n    s.lotes_recibidos.push({ order_no: item.json.ORDER_NO, lote: item.json.LOTE, release_no: item.json.RELEASE_NO, sequence_no: item.json.SEQUENCE_NO, reserved_qty: item.json.RESERVED_QTY });\n  }\n}\nreturn items;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -20,
+                                       220
+                                   ],
+                      "id":  "aa000002-0000-0000-0000-000000000002",
+                      "name":  "Guardar LOTE"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nif (!Array.isArray(s.orders_cerradas)) s.orders_cerradas = [];\nfor (const item of items) {\n  if (item.json.ORDER_NO) {\n    s.orders_cerradas.push({ order_no: item.json.ORDER_NO, release_no: item.json.RELEASE_NO, sequence_no: item.json.SEQUENCE_NO });\n  }\n}\nreturn items;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       395,
+                                       0
+                                   ],
+                      "id":  "aa000003-0000-0000-0000-000000000003",
+                      "name":  "Guardar ORDER"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nconst lotes = s.lotes_recibidos || [];\nconst orders = s.orders_cerradas || [];\nlet msg = \u0027RESUMEN SO_FINISHING_CLOSE\\n==============================\\n\\n\u0027;\nmsg += \"LOTES RECIBIDOS (${lotes.length}):\\n------------------------------\\n\";\nif (!lotes.length) msg += \u0027  Sin lotes pendientes\\n\u0027;\nelse for (const l of lotes) msg += \"  ORDER_NO: ${l.order_no} | LOTE: ${l.lote} | QTY: ${l.reserved_qty}\\n\";\nmsg += \"\\nORDERS CERRADAS (${orders.length}):\\n------------------------------\\n\";\nif (!orders.length) msg += \u0027  Sin orders para cerrar\\n\u0027;\nelse for (const o of orders) msg += \"  ORDER_NO: ${o.order_no}\\n\";\nreturn [{ json: { resumen: msg, num_lotes: lotes.length, num_orders: orders.length } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       520,
+                                       -320
+                                   ],
+                      "id":  "aa000004-0000-0000-0000-000000000004",
+                      "name":  "Preparar resumen"
+                  },
+                  {
+                      "parameters":  {
+                                         "sendTo":  "juan.ibanez@aludium.com",
+                                         "subject":  "=Resumen SO_FINISHING_CLOSE - {{ $json.num_lotes }} lotes / {{ $json.num_orders }} orders",
+                                         "bodyContent":  "={{ $json.resumen }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "type":  "n8n-nodes-base.microsoftOutlook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       760,
+                                       -320
+                                   ],
+                      "id":  "aa000005-0000-0000-0000-000000000005",
+                      "name":  "Email resumen",
+                      "credentials":  {
+                                          "microsoftOutlookOAuth2Api":  {
+                                                                            "id":  "XUxonaOR968iJN3G",
+                                                                            "name":  "Outlook Email Sender Account"
+                                                                        }
+                                      },
+                      "webhookId":  "e5ca44fa-1fae-4be6-97c6-42dcb8edcdfe"
                   }
               ],
     "connections":  {
@@ -271,7 +348,7 @@
                                                                            "main":  [
                                                                                         [
                                                                                             {
-                                                                                                "node":  "Query database",
+                                                                                                "node":  "Inicializar datos",
                                                                                                 "type":  "main",
                                                                                                 "index":  0
                                                                                             }
@@ -300,7 +377,7 @@
                                                              ],
                                                              [
                                                                  {
-                                                                     "node":  "Execute database",
+                                                                     "node":  "Guardar LOTE",
                                                                      "type":  "main",
                                                                      "index":  0
                                                                  }
@@ -361,11 +438,15 @@
                         "Loop Over Items1":  {
                                                  "main":  [
                                                               [
-
+                                                                  {
+                                                                      "node":  "Preparar resumen",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
                                                               ],
                                                               [
                                                                   {
-                                                                      "node":  "Execute database1",
+                                                                      "node":  "Guardar ORDER",
                                                                       "type":  "main",
                                                                       "index":  0
                                                                   }
@@ -411,7 +492,43 @@
                                                                     }
                                                                 ]
                                                             ]
-                                               }
+                                               },
+                        "Inicializar datos":  {
+                                                  "main":  [
+                                                               {
+                                                                   "node":  "Query database",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                              },
+                        "Guardar LOTE":  {
+                                             "main":  [
+                                                          {
+                                                              "node":  "Execute database",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                         },
+                        "Guardar ORDER":  {
+                                              "main":  [
+                                                           {
+                                                               "node":  "Execute database1",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                          },
+                        "Preparar resumen":  {
+                                                 "main":  [
+                                                              {
+                                                                  "node":  "Email resumen",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                             }
                     },
     "settings":  {
                      "executionOrder":  "v1",
@@ -425,9 +542,9 @@
     "pinData":  {
 
                 },
-    "versionId":  "17bfad84-259f-41a1-8158-90ac5f1faec3",
+    "versionId":  "03de37ea-d446-4535-9344-92fdf2967724",
     "activeVersionId":  null,
-    "versionCounter":  86,
+    "versionCounter":  87,
     "triggerCount":  0,
     "shared":  [
                    {
