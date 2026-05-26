@@ -86,7 +86,7 @@
     {
       "parameters": {
         "operation": "execute",
-        "query": "=DECLARE\n   v_order_no_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p0_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p1_ VARCHAR2(32000) := '{{ $json.RELEASE_NO }}';\n   p2_ VARCHAR2(32000) := '{{ $json.SEQUENCE_NO }}';\nBEGIN\n   IF v_order_no_ IS NOT NULL AND LENGTH(TRIM(v_order_no_)) > 0 THEN\n      IFSAPP.Shop_Ord_API.Close_So_Under_Issue('AMO', p0_, p1_, p2_);\n   END IF;\nEND;",
+        "query": "=DECLARE\n   v_order_no_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   v_attr_     VARCHAR2(32000) := '';\n   p0_ VARCHAR2(32000) := '{{ $json.ORDER_NO }}';\n   p1_ VARCHAR2(32000) := '{{ $json.RELEASE_NO }}';\n   p2_ VARCHAR2(32000) := '{{ $json.SEQUENCE_NO }}';\nBEGIN\n   IF v_order_no_ IS NOT NULL AND LENGTH(TRIM(v_order_no_)) > 0 THEN\n      IFSAPP.Shop_Ord_API.Close_So_Under_Issue(v_attr_, p0_, p1_, p2_);\n   END IF;\nEND;",
         "poolOptions": {}
       },
       "type": "@rempel/n8n-nodes-oracle.oracle",
