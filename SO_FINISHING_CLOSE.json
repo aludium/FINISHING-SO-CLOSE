@@ -47,6 +47,7 @@
       "position": [80, 160],
       "id": "1e529caa-7b84-4da4-b756-830f64e0ade2",
       "name": "Execute database",
+      "continueOnFail": true,
       "credentials": {
         "oracleApi": {
           "id": "nyxPmQOvgDO0vvFg",
@@ -93,6 +94,7 @@
       "position": [520, -140],
       "id": "f969f5b9-55f7-4ad9-a1d7-21cd518d69bb",
       "name": "Execute database1",
+      "continueOnFail": true,
       "credentials": {
         "oracleApi": {
           "id": "nyxPmQOvgDO0vvFg",
