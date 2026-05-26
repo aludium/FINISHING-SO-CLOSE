@@ -57,6 +57,50 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567891",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [300, 160],
+      "id": "c1d2e3f4-a5b6-7890-cdef-012345678901",
+      "name": "Error en recepcion?"
+    },
+    {
+      "parameters": {
+        "fromEmail": "n8n@aludium.com",
+        "toEmail": "juan.ibanez@aludium.com",
+        "subject": "=Error recepcion lote - ORDER_NO: {{ $json.ORDER_NO }}",
+        "emailType": "text",
+        "message": "=Se ha producido un error al recibir el lote en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\nLOTE:        {{ $json.LOTE }}\n\nError:\n{{ $json.error }}"
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [520, 60],
+      "id": "d2e3f4a5-b6c7-8901-def0-123456789012",
+      "name": "Email error recepcion",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
         "query": "SELECT DISTINCT\n    so.order_no,\n    so.release_no,\n    so.sequence_no\nFROM ifsapp.shop_ord so\nWHERE so.contract = 'AMO'\n  AND so.state    = 'Started'\n  AND so.part_no <> 'COMBIITEM'\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = 'LAB'\n          AND op.oper_status_code_db = 90\n      )\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = 'QINSP'\n          AND op.oper_status_code_db = 90\n      )\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = 'EMB'\n          AND op.oper_status_code_db = 90\n      )\n  AND NOT EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no LIKE 'SBB%'\n      )",
         "poolOptions": {}
       },
@@ -101,6 +145,50 @@
           "name": "IFS"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "b2c3d4e5-f6a7-8901-bcde-f01234567892",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [740, -140],
+      "id": "e3f4a5b6-c7d8-9012-ef01-234567890123",
+      "name": "Error en cierre?"
+    },
+    {
+      "parameters": {
+        "fromEmail": "n8n@aludium.com",
+        "toEmail": "juan.ibanez@aludium.com",
+        "subject": "=Error cierre SO - ORDER_NO: {{ $json.ORDER_NO }}",
+        "emailType": "text",
+        "message": "=Se ha producido un error al cerrar la Shop Order en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\n\nError:\n{{ $json.error }}"
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [960, -60],
+      "id": "f4a5b6c7-d8e9-0123-f012-345678901234",
+      "name": "Email error cierre",
+      "continueOnFail": true
     }
   ],
   "pinData": {},
@@ -149,6 +237,35 @@
       "main": [
         [
           {
+            "node": "Error en recepcion?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error en recepcion?": {
+      "main": [
+        [
+          {
+            "node": "Email error recepcion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email error recepcion": {
+      "main": [
+        [
+          {
             "node": "Loop Over Items",
             "type": "main",
             "index": 0
@@ -180,6 +297,35 @@
       ]
     },
     "Execute database1": {
+      "main": [
+        [
+          {
+            "node": "Error en cierre?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error en cierre?": {
+      "main": [
+        [
+          {
+            "node": "Email error cierre",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email error cierre": {
       "main": [
         [
           {
