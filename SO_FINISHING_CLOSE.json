@@ -1,1 +1,657 @@
-﻿
+﻿{
+    "updatedAt":  "2026-05-26T11:22:51.077Z",
+    "createdAt":  "2026-04-21T14:02:16.069Z",
+    "id":  "21T7HthEtcp1WVO0",
+    "name":  "SO_FINISHING_CLOSE",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -592,
+                                       16
+                                   ],
+                      "id":  "490452ed-367b-47f9-9ed7-4c9051ad3ef7",
+                      "name":  "When clicking \u0027Execute workflow\u0027"
+                  },
+                  {
+                      "parameters":  {
+                                         "query":  "SELECT\n    so.order_no,\n    so.release_no,\n    so.sequence_no,\n    so.contract,\n    so.part_no,\n    rlb.lote,\n    so.qty_complete,\n    NVL(rlb.numero_de_lotes, 0) AS numero_de_lotes,\n    NVL(rlb.reserved_qty, 0)    AS reserved_qty,\n    NVL(wc.num_wc_no_90, 0)     AS num_work_center_no_no_90\nFROM ifsapp.shop_ord so\nLEFT JOIN (\n    SELECT\n        lot_batch_no AS lote,\n        order_ref1   AS order_no,\n        order_ref2   AS release_no,\n        order_ref3   AS sequence_no,\n        COUNT(*)        AS numero_de_lotes,\n        SUM(reserved_qty) AS reserved_qty\n    FROM ifsapp.reserved_lot_batch\n    GROUP BY\n        order_ref1, order_ref2, order_ref3, lot_batch_no\n) rlb\n  ON rlb.order_no    = so.order_no\n AND rlb.release_no  = so.release_no\n AND rlb.sequence_no = so.sequence_no\nLEFT JOIN (\n    SELECT\n        order_no, release_no, sequence_no,\n        COUNT(*) AS num_wc_no_90\n    FROM ifsapp.shop_order_operation\n    WHERE oper_status_code_db \u003c\u003e 90\n    GROUP BY order_no, release_no, sequence_no\n) wc\n  ON wc.order_no    = so.order_no\n AND wc.release_no  = so.release_no\n AND wc.sequence_no = so.sequence_no\nWHERE so.contract = \u0027AMO\u0027\n  AND so.state    = \u0027Started\u0027\n  AND so.part_no \u003c\u003e \u0027COMBIITEM\u0027\n  AND so.qty_complete = 0\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = \u0027LAB\u0027\n          AND op.oper_status_code_db = 90\n      )\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = \u0027QINSP\u0027\n          AND op.oper_status_code_db = 90\n      )\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = \u0027EMB\u0027\n          AND op.oper_status_code_db = 90\n      )\n  AND NOT EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no LIKE \u0027SBB%\u0027\n      )\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.reserved_lot_batch rlb2\n        WHERE rlb2.order_ref1   = so.order_no\n          AND rlb2.order_ref2   = so.release_no\n          AND rlb2.order_ref3   = so.sequence_no\n          AND rlb2.c_total_tare \u003e 0\n      )",
+                                         "poolOptions":  {
+
+                                                         }
+                                     },
+                      "type":  "@rempel/n8n-nodes-oracle.oracle",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -368,
+                                       16
+                                   ],
+                      "id":  "ad95c39e-ad1b-4a78-bf3a-662bc1292e8d",
+                      "name":  "Query database",
+                      "credentials":  {
+                                          "oracleApi":  {
+                                                            "id":  "nyxPmQOvgDO0vvFg",
+                                                            "name":  "IFS"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -160,
+                                       16
+                                   ],
+                      "id":  "66aba5f9-38be-43fc-b030-f481f3c34e9e",
+                      "name":  "Loop Over Items"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "execute",
+                                         "query":  "=DECLARE\n   v_order_no_ VARCHAR2(32000) := \u0027{{ $json.ORDER_NO }}\u0027;\n   p0_  VARCHAR2(32000) := \u0027\u0027;\n   p1_  FLOAT;\n   p2_  VARCHAR2(32000) := \u0027{{ $json.ORDER_NO }}\u0027;\n   p3_  VARCHAR2(32000) := \u0027{{ $json.RELEASE_NO }}\u0027;\n   p4_  VARCHAR2(32000) := \u0027{{ $json.SEQUENCE_NO }}\u0027;\n   p5_  VARCHAR2(32000) := \u00271\u0027;\n   p6_  VARCHAR2(32000) := \u0027Yes\u0027;\n   p7_  VARCHAR2(32000) := \u0027No\u0027;\n   p8_  VARCHAR2(32000) := \u0027Shop Order\u0027;\n   p9_  FLOAT := NULL;\n   p10_ VARCHAR2(32000) := \u0027!\n$CONDITION_CODE=\n$LOCATION_NO=FG\n$LOT_BATCH_NO={{ $json.LOTE }}\n$WAIV_DEV_REJ_NO=\n$EXPIRATION_DATE=\n$AVAILABILITY_CONTROL_ID=\n$CATCH_QTY=0\n$RESERVED_QTY={{ $json.RESERVED_QTY }}\n\u0027;\n   p11_ VARCHAR2(32000) := \u0027No\u0027;\n   p12_ VARCHAR2(32000) := \u0027TRUE\u0027;\nBEGIN\n   IF v_order_no_ IS NOT NULL AND LENGTH(TRIM(v_order_no_)) \u003e 0 THEN\n      SELECT IFSAPP.Inventory_Putaway_Manager_API.Get_Next_Putaway_Event_Id INTO p1_ FROM DUAL;\n      IFSAPP.Shop_Ord_Util_API.Receive_Lots_In_Message__(p0_, p1_, p2_, p3_, p4_, p5_, p6_, p7_, p8_, p9_, p10_, p11_, p12_);\n   END IF;\nEND;",
+                                         "poolOptions":  {
+
+                                                         }
+                                     },
+                      "type":  "@rempel/n8n-nodes-oracle.oracle",
+                      "typeVersion":  1,
+                      "position":  [
+                                       80,
+                                       160
+                                   ],
+                      "id":  "1e529caa-7b84-4da4-b756-830f64e0ade2",
+                      "name":  "Execute database",
+                      "credentials":  {
+                                          "oracleApi":  {
+                                                            "id":  "nyxPmQOvgDO0vvFg",
+                                                            "name":  "IFS"
+                                                        }
+                                      },
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "a1b2c3d4-e5f6-7890-abcd-ef1234567891",
+                                                                                   "leftValue":  "={{ $json.error }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       304,
+                                       160
+                                   ],
+                      "id":  "c1d2e3f4-a5b6-7890-cdef-012345678901",
+                      "name":  "Error en recepcion?"
+                  },
+                  {
+                      "parameters":  {
+                                         "toRecipients":  "juan.ibanez@aludium.com",
+                                         "subject":  "=Error recepcion lote - ORDER_NO: {{ $json.ORDER_NO }}",
+                                         "bodyContent":  "=Se ha producido un error al recibir el lote en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\nLOTE:        {{ $json.LOTE }}\n\nError:\n{{ $json.error }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "type":  "n8n-nodes-base.microsoftOutlook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       528,
+                                       64
+                                   ],
+                      "id":  "d2e3f4a5-b6c7-8901-def0-123456789012",
+                      "name":  "Email error recepcion",
+                      "webhookId":  "a2e346a2-40dd-4e9a-9457-a1aa68d59e5d",
+                      "credentials":  {
+                                          "microsoftOutlookOAuth2Api":  {
+                                                                            "id":  "XUxonaOR968iJN3G",
+                                                                            "name":  "Outlook Email Sender Account"
+                                                                        }
+                                      },
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "query":  "SELECT DISTINCT\n    so.order_no,\n    so.release_no,\n    so.sequence_no\nFROM ifsapp.shop_ord so\nWHERE so.contract = \u0027AMO\u0027\n  AND so.state    = \u0027Started\u0027\n  AND so.part_no \u003c\u003e \u0027COMBIITEM\u0027\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = \u0027LAB\u0027\n          AND op.oper_status_code_db = 90\n      )\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = \u0027QINSP\u0027\n          AND op.oper_status_code_db = 90\n      )\n  AND EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no = \u0027EMB\u0027\n          AND op.oper_status_code_db = 90\n      )\n  AND NOT EXISTS (\n        SELECT 1 FROM ifsapp.shop_order_operation op\n        WHERE op.order_no    = so.order_no\n          AND op.release_no  = so.release_no\n          AND op.sequence_no = so.sequence_no\n          AND op.work_center_no LIKE \u0027SBB%\u0027\n      )",
+                                         "poolOptions":  {
+
+                                                         }
+                                     },
+                      "type":  "@rempel/n8n-nodes-oracle.oracle",
+                      "typeVersion":  1,
+                      "position":  [
+                                       80,
+                                       -144
+                                   ],
+                      "id":  "203c8ebe-48ee-4b9f-9100-6ef676f3e3d1",
+                      "name":  "Query SO para cierre",
+                      "executeOnce":  true,
+                      "credentials":  {
+                                          "oracleApi":  {
+                                                            "id":  "nyxPmQOvgDO0vvFg",
+                                                            "name":  "IFS"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       304,
+                                       -144
+                                   ],
+                      "id":  "ab59f131-89ef-41ea-8db6-a43b4531ce5f",
+                      "name":  "Loop Over Items1"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "execute",
+                                         "query":  "=DECLARE\n   v_order_no_ VARCHAR2(32000) := \u0027{{ $json.ORDER_NO }}\u0027;\n   v_attr_     VARCHAR2(32000) := \u0027\u0027;\n   p0_ VARCHAR2(32000) := \u0027{{ $json.ORDER_NO }}\u0027;\n   p1_ VARCHAR2(32000) := \u0027{{ $json.RELEASE_NO }}\u0027;\n   p2_ VARCHAR2(32000) := \u0027{{ $json.SEQUENCE_NO }}\u0027;\nBEGIN\n   IF v_order_no_ IS NOT NULL AND LENGTH(TRIM(v_order_no_)) \u003e 0 THEN\n      IFSAPP.Shop_Ord_API.Close_So_Under_Issue(v_attr_, p0_, p1_, p2_);\n   END IF;\nEND;",
+                                         "poolOptions":  {
+
+                                                         }
+                                     },
+                      "type":  "@rempel/n8n-nodes-oracle.oracle",
+                      "typeVersion":  1,
+                      "position":  [
+                                       528,
+                                       -144
+                                   ],
+                      "id":  "f969f5b9-55f7-4ad9-a1d7-21cd518d69bb",
+                      "name":  "Execute database1",
+                      "credentials":  {
+                                          "oracleApi":  {
+                                                            "id":  "nyxPmQOvgDO0vvFg",
+                                                            "name":  "IFS"
+                                                        }
+                                      },
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "b2c3d4e5-f6a7-8901-bcde-f01234567892",
+                                                                                   "leftValue":  "={{ $json.error }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       752,
+                                       -144
+                                   ],
+                      "id":  "e3f4a5b6-c7d8-9012-ef01-234567890123",
+                      "name":  "Error en cierre?"
+                  },
+                  {
+                      "parameters":  {
+                                         "toRecipients":  "juan.ibanez@aludium.com",
+                                         "subject":  "=Error cierre SO - ORDER_NO: {{ $json.ORDER_NO }}",
+                                         "bodyContent":  "=Se ha producido un error al cerrar la Shop Order en IFS.\n\nORDER_NO:    {{ $json.ORDER_NO }}\nRELEASE_NO:  {{ $json.RELEASE_NO }}\nSEQUENCE_NO: {{ $json.SEQUENCE_NO }}\n\nError:\n{{ $json.error }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "type":  "n8n-nodes-base.microsoftOutlook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       960,
+                                       -64
+                                   ],
+                      "id":  "f4a5b6c7-d8e9-0123-f012-345678901234",
+                      "name":  "Email error cierre",
+                      "webhookId":  "77345313-ef74-4abf-8c58-2ea1844f61d9",
+                      "credentials":  {
+                                          "microsoftOutlookOAuth2Api":  {
+                                                                            "id":  "XUxonaOR968iJN3G",
+                                                                            "name":  "Outlook Email Sender Account"
+                                                                        }
+                                      },
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nif (!Array.isArray(s.lotes_recibidos)) s.lotes_recibidos = [];\nif (!Array.isArray(s.orders_cerradas)) s.orders_cerradas = [];\ns.session_start_lotes = s.lotes_recibidos.length;\ns.session_start_orders = s.orders_cerradas.length;\nreturn items;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -480,
+                                       16
+                                   ],
+                      "id":  "aa000001-0000-0000-0000-000000000001",
+                      "name":  "Inicializar datos"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nif (!Array.isArray(s.lotes_recibidos)) s.lotes_recibidos = [];\nconst now = new Date().toISOString();\nfor (const item of items) {\n  if (item.json.ORDER_NO) {\n    s.lotes_recibidos.push({ order_no: item.json.ORDER_NO, lote: item.json.LOTE, release_no: item.json.RELEASE_NO, sequence_no: item.json.SEQUENCE_NO, reserved_qty: item.json.RESERVED_QTY, ts: now });\n  }\n}\nreturn items;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -20,
+                                       220
+                                   ],
+                      "id":  "aa000002-0000-0000-0000-000000000002",
+                      "name":  "Guardar LOTE"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nif (!Array.isArray(s.orders_cerradas)) s.orders_cerradas = [];\nconst now = new Date().toISOString();\nfor (const item of items) {\n  if (item.json.ORDER_NO) {\n    s.orders_cerradas.push({ order_no: item.json.ORDER_NO, release_no: item.json.RELEASE_NO, sequence_no: item.json.SEQUENCE_NO, ts: now });\n  }\n}\nreturn items;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       395,
+                                       0
+                                   ],
+                      "id":  "aa000003-0000-0000-0000-000000000003",
+                      "name":  "Guardar ORDER"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nconst startL = s.session_start_lotes || 0;\nconst startO = s.session_start_orders || 0;\nconst lotes = (s.lotes_recibidos || []).slice(startL);\nconst orders = (s.orders_cerradas || []).slice(startO);\nlet msg = \u0027RESUMEN SO_FINISHING_CLOSE\\n==============================\\n\\n\u0027;\nmsg += `LOTES RECIBIDOS (${lotes.length}):\\n------------------------------\\n`;\nif (!lotes.length) msg += \u0027  Sin lotes pendientes\\n\u0027;\nelse for (const l of lotes) msg += `  ORDER_NO: ${l.order_no} | LOTE: ${l.lote} | QTY: ${l.reserved_qty}\\n`;\nmsg += `\\nORDERS CERRADAS (${orders.length}):\\n------------------------------\\n`;\nif (!orders.length) msg += \u0027  Sin orders para cerrar\\n\u0027;\nelse for (const o of orders) msg += `  ORDER_NO: ${o.order_no}\\n`;\nreturn [{ json: { resumen: msg, num_lotes: lotes.length, num_orders: orders.length } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       520,
+                                       -320
+                                   ],
+                      "id":  "aa000004-0000-0000-0000-000000000004",
+                      "name":  "Preparar resumen"
+                  },
+                  {
+                      "parameters":  {
+                                         "toRecipients":  "juan.ibanez@aludium.com",
+                                         "subject":  "=Resumen SO_FINISHING_CLOSE - {{ $json.num_lotes }} lotes / {{ $json.num_orders }} orders",
+                                         "bodyContent":  "={{ $json.resumen }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "type":  "n8n-nodes-base.microsoftOutlook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       760,
+                                       -320
+                                   ],
+                      "id":  "aa000005-0000-0000-0000-000000000005",
+                      "name":  "Email resumen",
+                      "credentials":  {
+                                          "microsoftOutlookOAuth2Api":  {
+                                                                            "id":  "XUxonaOR968iJN3G",
+                                                                            "name":  "Outlook Email Sender Account"
+                                                                        }
+                                      },
+                      "webhookId":  "e5ca44fa-1fae-4be6-97c6-42dcb8edcdfe"
+                  },
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 16 * * 1-5"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -480,
+                                       -480
+                                   ],
+                      "id":  "bb000001-0000-0000-0000-000000000001",
+                      "name":  "Schedule 16:00"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const s = $getWorkflowStaticData(\u0027global\u0027);\nconst lotes = s.lotes_recibidos || [];\nconst orders = s.orders_cerradas || [];\nconst hoy = new Date().toLocaleDateString(\u0027es-ES\u0027, { day: \u00272-digit\u0027, month: \u00272-digit\u0027, year: \u0027numeric\u0027 });\nlet msg = `RESUMEN DIARIO SO_FINISHING_CLOSE - ${hoy}\\n`;\nmsg += \u0027=\u0027.repeat(50) + \u0027\\n\\n\u0027;\nmsg += `LOTES RECIBIDOS (${lotes.length}):\\n`;\nmsg += \u0027-\u0027.repeat(30) + \u0027\\n\u0027;\nif (!lotes.length) msg += \u0027  Sin lotes recibidos hoy\\n\u0027;\nelse for (const l of lotes) msg += `  ${l.ts.substring(0,16).replace(\u0027T\u0027,\u0027 \u0027)} | ORDER: ${l.order_no} | LOTE: ${l.lote} | QTY: ${l.reserved_qty}\\n`;\nmsg += `\\nORDERS CERRADAS (${orders.length}):\\n`;\nmsg += \u0027-\u0027.repeat(30) + \u0027\\n\u0027;\nif (!orders.length) msg += \u0027  Sin orders cerradas hoy\\n\u0027;\nelse for (const o of orders) msg += `  ${o.ts.substring(0,16).replace(\u0027T\u0027,\u0027 \u0027)} | ORDER: ${o.order_no}\\n`;\ns.lotes_recibidos = [];\ns.orders_cerradas = [];\ns.session_start_lotes = 0;\ns.session_start_orders = 0;\nreturn [{ json: { resumen: msg, num_lotes: lotes.length, num_orders: orders.length, fecha: hoy } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -240,
+                                       -480
+                                   ],
+                      "id":  "bb000002-0000-0000-0000-000000000002",
+                      "name":  "Resumen Diario"
+                  },
+                  {
+                      "parameters":  {
+                                         "toRecipients":  "juan.ibanez@aludium.com",
+                                         "subject":  "=Resumen diario SO_FINISHING_CLOSE {{ $json.fecha }} - {{ $json.num_lotes }} lotes / {{ $json.num_orders }} orders",
+                                         "bodyContent":  "={{ $json.resumen }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "type":  "n8n-nodes-base.microsoftOutlook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       -480
+                                   ],
+                      "id":  "bb000003-0000-0000-0000-000000000003",
+                      "name":  "Email resumen diario",
+                      "credentials":  {
+                                          "microsoftOutlookOAuth2Api":  {
+                                                                            "id":  "XUxonaOR968iJN3G",
+                                                                            "name":  "Outlook Email Sender Account"
+                                                                        }
+                                      },
+                      "webhookId":  "cc000001-0000-0000-0000-000000000001"
+                  }
+              ],
+    "connections":  {
+                        "When clicking \u0027Execute workflow\u0027":  {
+                                                                           "main":  [
+                                                                                        [
+                                                                                            {
+                                                                                                "node":  "Inicializar datos",
+                                                                                                "type":  "main",
+                                                                                                "index":  0
+                                                                                            }
+                                                                                        ]
+                                                                                    ]
+                                                                       },
+                        "Query database":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Loop Over Items",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Loop Over Items":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Query SO para cierre",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Guardar LOTE",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Execute database":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Error en recepcion?",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Error en recepcion?":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Email error recepcion",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ],
+                                                                 [
+                                                                     {
+                                                                         "node":  "Loop Over Items",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Email error recepcion":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Loop Over Items",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Query SO para cierre":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Loop Over Items1",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Loop Over Items1":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Preparar resumen",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Guardar ORDER",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Execute database1":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Error en cierre?",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Error en cierre?":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Email error cierre",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Loop Over Items1",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Email error cierre":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Loop Over Items1",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Inicializar datos":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Query database",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Guardar LOTE":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Execute database",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Guardar ORDER":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Execute database1",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Preparar resumen":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Email resumen",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Schedule 16:00":  {
+                                               "main":  [
+                                                            {
+                                                                "node":  "Resumen Diario",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                           },
+                        "Resumen Diario":  {
+                                               "main":  [
+                                                            {
+                                                                "node":  "Email resumen diario",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "pinData":  {
+
+                },
+    "versionId":  "03de37ea-d446-4535-9344-92fdf2967724",
+    "activeVersionId":  null,
+    "versionCounter":  87,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-21T14:02:16.069Z",
+                       "createdAt":  "2026-04-21T14:02:16.069Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "21T7HthEtcp1WVO0",
+                       "projectId":  "jdmSAx0EWkvuYFrY",
+                       "project":  {
+                                       "updatedAt":  "2025-10-07T11:01:56.877Z",
+                                       "createdAt":  "2025-10-07T11:01:49.591Z",
+                                       "id":  "jdmSAx0EWkvuYFrY",
+                                       "name":  "PLANNING",
+                                       "type":  "team",
+                                       "icon":  {
+                                                    "type":  "icon",
+                                                    "value":  "layers"
+                                                },
+                                       "description":  "",
+                                       "creatorId":  null
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}
